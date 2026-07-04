@@ -27,11 +27,11 @@ st.title("📊 Customer Churn Prediction Dashboard")
 
 st.write("Upload the Telco Customer Churn Dataset")
 
-uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
+#uploaded_file = st.file_uploader("WA_Fn-UseC_-Telco-Customer-Churn.csv", type=["csv"])
 
 if uploaded_file is not None:
 
-    df = pd.read_csv(uploaded_file)
+    df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
 
     st.success("Dataset Loaded Successfully")
 
