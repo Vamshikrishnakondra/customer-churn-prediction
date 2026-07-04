@@ -306,79 +306,98 @@ if True:
     # MODEL COMPARISON
     # =====================================================
 
-    elif option=="Model Comparison":
+  elif option == "Model Comparison":
 
-        st.header("Model Comparison")
+    st.header("📊 Model Comparison")
 
-        df_ml=df.copy()
+    df_ml = df.copy()
 
-        encoder=LabelEncoder()
+    # Convert TotalCharges to numeric
+    df_ml["TotalCharges"] = pd.to_numeric(df_ml["TotalCharges"], errors="coerce")
+    df_ml["TotalCharges"].fillna(df_ml["TotalCharges"].median(), inplace=True)
 
-        for col in df_ml.select_dtypes(include="object").columns:
-            df_ml[col]=encoder.fit_transform(df_ml[col])
+    # Create AvgCharges BEFORE scaling (optional)
+    if "AvgCharges" not in df_ml.columns:
+        df_ml["AvgCharges"] = df_ml["TotalCharges"] / (df_ml["tenure"] + 1)
 
-        scaler=StandardScaler()
+    # Replace inf values
+    df_ml.replace([np.inf, -np.inf], np.nan, inplace=True)
+    df_ml.fillna(df_ml.median(numeric_only=True), inplace=True)
 
-        cols=['tenure','MonthlyCharges','TotalCharges']
+    # Label Encoding
+    encoder = LabelEncoder()
 
-        df_ml[cols]=scaler.fit_transform(df_ml[cols])
+    for col in df_ml.select_dtypes(include="object").columns:
+        df_ml[col] = encoder.fit_transform(df_ml[col])
 
-        X=df_ml.drop(["customerID","Churn"],axis=1)
+    # Scale Numerical Columns
+    scaler = StandardScaler()
 
-        y=df_ml["Churn"]
+    num_cols = ["tenure", "MonthlyCharges", "TotalCharges", "AvgCharges"]
 
-        X_train,X_test,y_train,y_test=train_test_split(
-            X,
-            y,
-            test_size=0.2,
-            random_state=42,
-            stratify=y
-        )
+    df_ml[num_cols] = scaler.fit_transform(df_ml[num_cols])
 
-        models={
+    # Features & Target
+    X = df_ml.drop(["customerID", "Churn"], axis=1)
+    y = df_ml["Churn"]
 
-            "Logistic Regression":LogisticRegression(max_iter=1000),
+    # Final safety check
+    X.replace([np.inf, -np.inf], np.nan, inplace=True)
+    X.fillna(X.median(numeric_only=True), inplace=True)
 
-            "Random Forest":RandomForestClassifier(random_state=42),
+    # Train Test Split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        test_size=0.2,
+        random_state=42,
+        stratify=y
+    )
 
-            "Decision Tree":DecisionTreeClassifier(random_state=42),
+    models = {
+        "Logistic Regression": LogisticRegression(max_iter=1000),
+        "Random Forest": RandomForestClassifier(random_state=42),
+        "Decision Tree": DecisionTreeClassifier(random_state=42),
+        "Gradient Boosting": GradientBoostingClassifier(random_state=42),
+        "SVM": SVC(probability=True, random_state=42)
+    }
 
-            "Gradient Boosting":GradientBoostingClassifier(random_state=42),
+    results = []
 
-            "SVM":SVC(probability=True)
+    for name, model in models.items():
 
-        }
+        model.fit(X_train, y_train)
 
-        results=[]
+        pred = model.predict(X_test)
 
-        for name,model in models.items():
+        if hasattr(model, "predict_proba"):
+            prob = model.predict_proba(X_test)[:, 1]
+        else:
+            prob = model.decision_function(X_test)
 
-            model.fit(X_train,y_train)
+        acc = accuracy_score(y_test, pred)
+        auc = roc_auc_score(y_test, prob)
 
-            pred=model.predict(X_test)
+        results.append({
+            "Model": name,
+            "Accuracy": round(acc, 4),
+            "ROC-AUC": round(auc, 4)
+        })
 
-            prob=model.predict_proba(X_test)[:,1]
+    result = pd.DataFrame(results)
+    result = result.sort_values(by="ROC-AUC", ascending=False)
 
-            acc=accuracy_score(y_test,pred)
+    st.dataframe(result, use_container_width=True)
 
-            auc=roc_auc_score(y_test,prob)
+    fig, ax = plt.subplots(figsize=(8, 5))
 
-            results.append([name,acc,auc])
+    sns.barplot(
+        data=result,
+        x="Accuracy",
+        y="Model",
+        ax=ax
+    )
 
-        result=pd.DataFrame(
-            results,
-            columns=["Model","Accuracy","ROC-AUC"]
-        )
+    ax.set_title("Model Accuracy Comparison")
 
-        st.dataframe(result)
-
-        fig,ax=plt.subplots(figsize=(8,5))
-
-        sns.barplot(
-            x="Accuracy",
-            y="Model",
-            data=result,
-            ax=ax
-        )
-
-        st.pyplot(fig)
+    st.pyplot(fig)
