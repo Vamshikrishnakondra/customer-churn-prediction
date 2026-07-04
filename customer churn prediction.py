@@ -305,19 +305,25 @@ if True:
     # =====================================================
     # MODEL COMPARISON
     # =====================================================
-   elif option == "Model Comparison":
+    elif option == "Model Comparison":
 
     st.header("📊 Model Comparison")
 
     df_ml = df.copy()
 
     # Convert TotalCharges to numeric
-    df_ml["TotalCharges"] = pd.to_numeric(df_ml["TotalCharges"], errors="coerce")
-    df_ml["TotalCharges"].fillna(df_ml["TotalCharges"].median(), inplace=True)
+    df_ml["TotalCharges"] = pd.to_numeric(
+        df_ml["TotalCharges"], errors="coerce"
+    )
+    df_ml["TotalCharges"].fillna(
+        df_ml["TotalCharges"].median(), inplace=True
+    )
 
-    # Create AvgCharges BEFORE scaling (optional)
+    # Create AvgCharges
     if "AvgCharges" not in df_ml.columns:
-        df_ml["AvgCharges"] = df_ml["TotalCharges"] / (df_ml["tenure"] + 1)
+        df_ml["AvgCharges"] = (
+            df_ml["TotalCharges"] / (df_ml["tenure"] + 1)
+        )
 
     # Replace inf values
     df_ml.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -329,10 +335,15 @@ if True:
     for col in df_ml.select_dtypes(include="object").columns:
         df_ml[col] = encoder.fit_transform(df_ml[col])
 
-    # Scale Numerical Columns
+    # Scale numerical columns
     scaler = StandardScaler()
 
-    num_cols = ["tenure", "MonthlyCharges", "TotalCharges", "AvgCharges"]
+    num_cols = [
+        "tenure",
+        "MonthlyCharges",
+        "TotalCharges",
+        "AvgCharges"
+    ]
 
     df_ml[num_cols] = scaler.fit_transform(df_ml[num_cols])
 
@@ -344,7 +355,7 @@ if True:
     X.replace([np.inf, -np.inf], np.nan, inplace=True)
     X.fillna(X.median(numeric_only=True), inplace=True)
 
-    # Train Test Split
+    # Train-Test Split
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
