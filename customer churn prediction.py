@@ -29,7 +29,7 @@ st.write("Upload the Telco Customer Churn Dataset")
 
 #uploaded_file = st.file_uploader("WA_Fn-UseC_-Telco-Customer-Churn.csv", type=["csv"])
 
-#if uploaded_file is not None:
+if True:
 
     df = pd.read_csv(r"Data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
 
