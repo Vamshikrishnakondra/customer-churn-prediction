@@ -31,7 +31,7 @@ st.write("Upload the Telco Customer Churn Dataset")
 
 if True:
 
-    df = pd.read_csv(r"Data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
+    df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
 
     st.success("Dataset Loaded Successfully")
 
