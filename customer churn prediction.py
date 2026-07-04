@@ -305,8 +305,7 @@ if True:
     # =====================================================
     # MODEL COMPARISON
     # =====================================================
-
-  elif option == "Model Comparison":
+   elif option == "Model Comparison":
 
     st.header("📊 Model Comparison")
 
